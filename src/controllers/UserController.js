@@ -3,19 +3,24 @@ const mongoose = require('mongoose')
 const jwt = require("jsonwebtoken")
 const bcrypt = require('bcrypt')
 const Objectid = mongoose.Types.ObjectId.isValid
-const { isPresent, isValidName,
-    isValidEmail, isValidPhone, isValidPassword, isValidPin, isValidadd } = require('../validation/validation')
+const { isPresent,
+    isValidName,
+    isValidEmail,
+    isValidPhone,
+    isValidPassword,
+    isValidPin,
+    isValidadd } = require('../validation/validation')
 
 const { uploadFile } = require('../AWS/aws')
 
 const createUser = async function (req, res) {
     try {
 
-        const data = req.body
-        const file = req.files
+        let data = req.body
+        let file = req.files
 
         if (Object.keys(data).length == 0 && typeof (file) == 'undefined') return res.status(400).send({ status: false, message: "Please Enter data to Create the User" })
-        const { fname, lname, email, phone, password, address } = data
+        let { fname, lname, email, phone, password, address } = data
 
         if (!isPresent(fname)) return res.status(400).send({ status: false, message: "fname is mandatory" })
         if (!isValidName(fname)) return res.status(400).send({ status: false, message: "Please Provide the valid fname" })
@@ -39,29 +44,57 @@ const createUser = async function (req, res) {
         if (!isPresent(password)) return res.status(400).send({ status: false, message: "Password is mandatory" })
         if (!isValidPassword(password)) return res.status(400).send({ status: false, message: "password must have one capital one small one number and one special character[#?!@$%^&*-]" })
 
-        // ---------> Address <---------
+        // // ---------> Address <---------
 
-        if (!isPresent(address)) return res.status(400).send({ status: false, message: "Address is mandatory" })
+        // if (!isPresent(address)) return res.status(400).send({ status: false, message: "Address is mandatory" })
 
-        // ---------> Shipping Address <---------
+        // // ---------> Shipping Address <---------
 
-        if (!isPresent(address.shipping)) return res.status(400).send({ status: false, message: "Please provide the Shipping address" })
-        if (!isPresent(address.shipping.street)) return res.status(400).send({ status: false, message: "shipping Street is mandatory" })
-        if (!isValidadd(address.shipping.street)) return res.status(400).send({ status: false, message: "shipping street containt only these letters [a-zA-Z_ ,.-]" })
-        if (!isPresent(address.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory" })
-        if (!isValidadd(address.shipping.city)) return res.status(400).send({ status: false, message: "shipping city containt only these letters [a-zA-Z_ ,.-]" })
-        if (!isPresent(address.shipping.pincode)) return res.status(400).send({ status: false, message: "shipping pincode is mandatory" })
-        if (!isValidPin(address.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode of 6 digits" })
+        // if (!isPresent(address.shipping)) return res.status(400).send({ status: false, message: "Please provide the Shipping address" })
+        // if (!isPresent(address.shipping.street)) return res.status(400).send({ status: false, message: "shipping Street is mandatory" })
+        // if (!isValidadd(address.shipping.street)) return res.status(400).send({ status: false, message: "shipping street containt only these letters [a-zA-Z_ ,.-]" })
+        // if (!isPresent(address.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory" })
+        // if (!isValidadd(address.shipping.city)) return res.status(400).send({ status: false, message: "shipping city containt only these letters [a-zA-Z_ ,.-]" })
+        // if (!isPresent(address.shipping.pincode)) return res.status(400).send({ status: false, message: "shipping pincode is mandatory" })
+        // if (!isValidPin(address.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode of 6 digits" })
 
-        // ---------> Billing Address <---------
+        // // ---------> Billing Address <---------
 
-        if (!isPresent(address.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
-        if (!isPresent(address.billing.street)) return res.status(400).send({ status: false, message: "billing Street is mandatory" })
-        if (!isValidadd(address.billing.street)) return res.status(400).send({ status: false, message: "billing street containt only these letters [a-zA-Z_ ,.-]" })
-        if (!isPresent(address.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory" })
-        if (!isValidadd(address.billing.city)) return res.status(400).send({ status: false, message: "billing city containt only these letters [a-zA-Z_ ,.-]" })
-        if (!isPresent(address.billing.pincode)) return res.status(400).send({ status: false, message: " billing pincode is mandatory" })
-        if (!isValidPin(address.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode of 6 digits" })
+        // if (!isPresent(address.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
+        // if (!isPresent(address.billing.street)) return res.status(400).send({ status: false, message: "billing Street is mandatory" })
+        // if (!isValidadd(address.billing.street)) return res.status(400).send({ status: false, message: "billing street containt only these letters [a-zA-Z_ ,.-]" })
+        // if (!isPresent(address.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory" })
+        // if (!isValidadd(address.billing.city)) return res.status(400).send({ status: false, message: "billing city containt only these letters [a-zA-Z_ ,.-]" })
+        // if (!isPresent(address.billing.pincode)) return res.status(400).send({ status: false, message: " billing pincode is mandatory" })
+        // if (!isValidPin(address.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode of 6 digits" })
+
+
+        if (!address) { return res.status(400).send({ status: false, message: " Adress is mandatory" }) }
+
+        address = JSON.parse(address)
+        let { shipping, billing } = address
+        if (!address.hasOwnProperty("shipping")) return res.status(400).send({ status: false, message: "Shipping Address is required " })
+        if (!address.hasOwnProperty("billing")) return res.status(400).send({ status: false, message: "billing Address is required " })
+
+        if (!shipping.hasOwnProperty("street")) return res.status(400).send({ status: false, message: "Shipping street is required " })
+        if (!shipping.hasOwnProperty("city")) return res.status(400).send({ status: false, message: "Shipping city is required " })
+        if (!shipping.hasOwnProperty("pincode")) return res.status(400).send({ status: false, message: "Shipping pincode is required " })
+        if (!isPresent(shipping.street)) return res.status(400).send({ status: false, message: " shipping street is invalid " })
+        if (!isValidName(shipping.city)) return res.status(400).send({ status: false, message: "Shipping city is invalid" })
+        if (!isValidPin(shipping.pincode)) return res.status(400).send({ status: false, message: " shipping pincode is invalid. There must be six digits" })
+
+
+        if (!billing.hasOwnProperty("street")) return res.status(400).send({ status: false, message: "billing street is required " })
+        if (!billing.hasOwnProperty("city")) return res.status(400).send({ status: false, message: "billing city is required " })
+        if (!billing.hasOwnProperty("pincode")) return res.status(400).send({ status: false, message: "billing pincode is required " })
+
+        if (!isPresent(billing.street)) return res.status(400).send({ status: false, message: " billing street is invalid " })
+        if (!isValidName(billing.city)) return res.status(400).send({ status: false, message: "billing city is invalid" })
+        if (!isValidPin(billing.pincode)) return res.status(400).send({ status: false, message: " billing pincode is invalid. There must be six digits" })
+
+        data.address = address
+
+
 
 
         if (file && file.length > 0) {

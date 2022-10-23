@@ -184,7 +184,7 @@ const getproduct = async function (req, res) {
         let finalData = await productModel.find(filter).sort({ price: pricesort })
 
         if (finalData.length == 0) {
-            return res.status(200).send({ status: false, message: "No product available" })
+            return res.status(404).send({ status: false, message: "No product available" })
         }
 
         return res.status(200).send({ status: true, message: "Success", data: finalData })
@@ -221,8 +221,8 @@ const updateproduct = async function (req, res) {
 
         let data = req.body
         let file = req.files
-        console.log(typeof (file));
-        console.log(file);
+        // console.log(typeof (file));
+        // console.log(file);
         if (Object.keys(data).length == 0 && typeof (file) == 'undefined') {
             return res.status(400).send({ status: "false", message: "Please enter the data to create a user" });
         }

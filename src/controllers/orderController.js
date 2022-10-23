@@ -82,7 +82,7 @@ const updateorder = async function (req, res) {
             { $set: { status: status } },
             { new: true }
         )
-        console.log(updateorder)
+       // console.log(updateorder)
         if (status == "completed") { return res.status(200).send({ status:true, message:"Success", data: updateorder }) }
         return res.status(200).send({ status:true, message:"Success"})
     }
